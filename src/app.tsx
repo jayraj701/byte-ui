@@ -1,12 +1,9 @@
 import 'src/global.css';
 
 import { useEffect } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { usePathname } from 'src/routes/hooks';
 
-import { queryClient } from 'src/lib/query-client';
 import { LocalizationProvider } from 'src/locales';
 import { themeConfig, ThemeProvider } from 'src/theme';
 import { I18nProvider } from 'src/locales/i18n-provider';
@@ -29,26 +26,23 @@ export default function App({ children }: AppProps) {
 
   return (
     <I18nProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <SettingsProvider defaultSettings={defaultSettings}>
-            <LocalizationProvider>
-              <ThemeProvider
-                modeStorageKey={themeConfig.modeStorageKey}
-                defaultMode={themeConfig.defaultMode}
-              >
-                <MotionLazy>
-                  <Snackbar />
-                  <ProgressBar />
-                  <SettingsDrawer defaultSettings={defaultSettings} />
-                  {children}
-                </MotionLazy>
-              </ThemeProvider>
-            </LocalizationProvider>
-          </SettingsProvider>
-        </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      <AuthProvider>
+        <SettingsProvider defaultSettings={defaultSettings}>
+          <LocalizationProvider>
+            <ThemeProvider
+              modeStorageKey={themeConfig.modeStorageKey}
+              defaultMode={themeConfig.defaultMode}
+            >
+              <MotionLazy>
+                <Snackbar />
+                <ProgressBar />
+                <SettingsDrawer defaultSettings={defaultSettings} />
+                {children}
+              </MotionLazy>
+            </ThemeProvider>
+          </LocalizationProvider>
+        </SettingsProvider>
+      </AuthProvider>
     </I18nProvider>
   );
 }

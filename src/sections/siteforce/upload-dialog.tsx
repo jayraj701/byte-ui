@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router';
 
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -21,11 +20,11 @@ import { useUploadAndCalculate } from 'src/api/hooks';
 type Props = {
   open: boolean;
   onClose: () => void;
+  onUploaded?: (batchId: string) => void;
 };
 
-export function UploadDialog({ open, onClose }: Props) {
+export function UploadDialog({ open, onClose, onUploaded }: Props) {
   const [file, setFile] = useState<File | null>(null);
-  const [, setSearchParams] = useSearchParams();
 
   const { mutate, isPending, error, reset } = useUploadAndCalculate();
 
@@ -47,7 +46,7 @@ export function UploadDialog({ open, onClose }: Props) {
     mutate(file, {
       onSuccess: ({ upload }) => {
         toast.success(`${upload.recordCount} records calculated for ${upload.fileName}`);
-        setSearchParams({ batchId: upload.batchId }, { replace: true });
+        onUploaded?.(upload.batchId);
         handleClose();
       },
       onError: () => {

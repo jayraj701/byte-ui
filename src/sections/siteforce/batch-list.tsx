@@ -5,7 +5,6 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useSearchParams } from 'react-router';
 
 import { fDate } from 'src/utils/format-time';
 
@@ -18,17 +17,12 @@ import { useBatches } from 'src/api/hooks';
 
 type Props = {
   onUploadClick: () => void;
+  activeBatchId?: string;
+  onBatchSelect: (id: string) => void;
 };
 
-export function BatchList({ onUploadClick }: Props) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeBatchId = searchParams.get('batchId');
-
+export function BatchList({ onUploadClick, activeBatchId, onBatchSelect }: Props) {
   const { data: batches, isLoading } = useBatches();
-
-  const handleSelect = (id: string) => {
-    setSearchParams({ batchId: id }, { replace: true });
-  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -68,7 +62,7 @@ export function BatchList({ onUploadClick }: Props) {
               key={batch.id}
               batch={batch}
               active={batch.id === activeBatchId}
-              onSelect={() => handleSelect(batch.id)}
+              onSelect={() => onBatchSelect(batch.id)}
             />
           ))}
       </Stack>

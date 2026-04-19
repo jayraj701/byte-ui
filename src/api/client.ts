@@ -1,4 +1,4 @@
-import type { UploadResponse, PayrollBatch, SummaryRow, AuditLog, PayrollCalculation } from './types';
+import type { UploadResponse, PayrollBatch, SummaryRow, AuditLog, PayrollCalculation, DashboardSummary } from './types';
 
 import axiosInstance from 'src/lib/axios';
 
@@ -32,4 +32,8 @@ export const auditApi = {
     axiosInstance.get<AuditLog[]>('/api/audit', {
       params: batchId ? { batchId } : undefined,
     }),
+};
+
+export const dashboardApi = {
+  getSummary: () => axiosInstance.get<DashboardSummary>('/api/dashboard'),
 };
