@@ -1,66 +1,164 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 
-import { attendanceApi, auditApi, payrollApi } from './client';
+import type { AuditLog, DashboardSummary, PayrollBatch, SummaryRow, UploadResponse, PayrollCalculation } from './types';
+import { attendanceApi, auditApi, dashboardApi, payrollApi } from './client';
 
-// ─── Query keys ──────────────────────────────────────────────────────────────
+// ─── Cross-hook invalidation via browser custom events ────────────────────────
 
-export const queryKeys = {
-  batches: ['batches'] as const,
-  summary: (batchId?: string) => ['summary', batchId] as const,
-  audit: (batchId?: string) => ['audit', batchId] as const,
+const emit = (key: string) => window.dispatchEvent(new Event(key));
+
+const listen = (key: string, fn: () => void) => {
+  window.addEventListener(key, fn);
+  return () => window.removeEventListener(key, fn);
 };
 
-// ─── Queries ─────────────────────────────────────────────────────────────────
+// ─── useDashboard ─────────────────────────────────────────────────────────────
+
+export function useDashboard() {
+  const [data, setData] = useState<DashboardSummary | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetch = useCallback(() => {
+    setIsLoading(true);
+    dashboardApi
+      .getSummary()
+      .then((r) => setData(r.data))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => listen('sf:batches', fetch), [fetch]);
+
+  return { data, isLoading };
+}
+
+// ─── useBatches ───────────────────────────────────────────────────────────────
 
 export function useBatches() {
-  return useQuery({
-    queryKey: queryKeys.batches,
-    queryFn: () => payrollApi.getBatches().then((r) => r.data),
-  });
+  const [data, setData] = useState<PayrollBatch[] | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetch = useCallback(() => {
+    setIsLoading(true);
+    payrollApi
+      .getBatches()
+      .then((r) => setData(r.data))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => listen('sf:batches', fetch), [fetch]);
+
+  return { data, isLoading };
 }
+
+// ─── useSummary ───────────────────────────────────────────────────────────────
 
 export function useSummary(batchId?: string) {
-  return useQuery({
-    queryKey: queryKeys.summary(batchId),
-    queryFn: () => payrollApi.getSummary(batchId).then((r) => r.data),
-    enabled: !!batchId,
-  });
+  const [data, setData] = useState<SummaryRow[] | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetch = useCallback(() => {
+    if (!batchId) { setData(undefined); return; }
+    setIsLoading(true);
+    setData(undefined);
+    payrollApi
+      .getSummary(batchId)
+      .then((r) => setData(r.data))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [batchId]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => listen('sf:summary', fetch), [fetch]);
+
+  return { data, isLoading };
 }
+
+// ─── useAuditLogs ─────────────────────────────────────────────────────────────
 
 export function useAuditLogs(batchId?: string) {
-  return useQuery({
-    queryKey: queryKeys.audit(batchId),
-    queryFn: () => auditApi.getLogs(batchId).then((r) => r.data),
-    enabled: !!batchId,
-  });
+  const [data, setData] = useState<AuditLog[] | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetch = useCallback(() => {
+    if (!batchId) { setData(undefined); return; }
+    setIsLoading(true);
+    setData(undefined);
+    auditApi
+      .getLogs(batchId)
+      .then((r) => setData(r.data))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [batchId]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => listen('sf:audit', fetch), [fetch]);
+
+  return { data, isLoading };
 }
 
-// ─── Mutations ───────────────────────────────────────────────────────────────
+// ─── useUploadAndCalculate ────────────────────────────────────────────────────
+
+type UploadResult = { upload: UploadResponse; calculations: PayrollCalculation[] };
+type UploadCallbacks = {
+  onSuccess?: (result: UploadResult) => void;
+  onError?: (e: Error) => void;
+};
 
 export function useUploadAndCalculate() {
-  const qc = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  return useMutation({
-    mutationFn: async (file: File) => {
+  const mutate = useCallback(async (file: File, callbacks?: UploadCallbacks) => {
+    setIsPending(true);
+    setError(null);
+    try {
       const { data: upload } = await attendanceApi.upload(file);
       const { data: calculations } = await attendanceApi.calculate(upload.batchId);
-      return { upload, calculations };
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.batches });
-    },
-  });
+      emit('sf:batches');
+      callbacks?.onSuccess?.({ upload, calculations });
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Upload failed');
+      setError(err);
+      callbacks?.onError?.(err);
+    } finally {
+      setIsPending(false);
+    }
+  }, []);
+
+  const reset = useCallback(() => setError(null), []);
+
+  return { mutate, isPending, error, reset };
 }
 
-export function useApproveBatch(batchId: string) {
-  const qc = useQueryClient();
+// ─── useApproveBatch ──────────────────────────────────────────────────────────
 
-  return useMutation({
-    mutationFn: () => payrollApi.approveBatch(batchId).then((r) => r.data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.batches });
-      qc.invalidateQueries({ queryKey: queryKeys.summary(batchId) });
-      qc.invalidateQueries({ queryKey: queryKeys.audit(batchId) });
-    },
-  });
+type ApproveCallbacks = {
+  onSuccess?: () => void;
+  onError?: (e: Error) => void;
+};
+
+export function useApproveBatch(batchId: string) {
+  const [isPending, setIsPending] = useState(false);
+
+  const mutate = useCallback(async (_variables: undefined, callbacks?: ApproveCallbacks) => {
+    setIsPending(true);
+    try {
+      await payrollApi.approveBatch(batchId);
+      emit('sf:batches');
+      emit('sf:summary');
+      emit('sf:audit');
+      callbacks?.onSuccess?.();
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Approval failed');
+      callbacks?.onError?.(err);
+    } finally {
+      setIsPending(false);
+    }
+  }, [batchId]);
+
+  return { mutate, isPending };
 }

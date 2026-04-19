@@ -9,11 +9,11 @@ import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import ButtonBase from '@mui/material/ButtonBase';
 import Button, { buttonClasses } from '@mui/material/Button';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomPopover } from 'src/components/custom-popover';
@@ -25,7 +25,6 @@ export type WorkspacesPopoverProps = ButtonBaseProps & {
     id: string;
     name: string;
     logo: string;
-    plan: string;
   }[];
 };
 
@@ -79,12 +78,9 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
       ]}
       {...other}
     >
-      <Box
-        component="img"
-        alt={workspace?.name}
-        src={workspace?.logo}
-        sx={{ width: 24, height: 24, borderRadius: '50%' }}
-      />
+      <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: 'primary.main' }}>
+        {workspace?.name?.charAt(0)}
+      </Avatar>
 
       <Box
         component="span"
@@ -92,17 +88,6 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
       >
         {workspace?.name}
       </Box>
-
-      <Label
-        color={workspace?.plan === 'Free' ? 'default' : 'info'}
-        sx={{
-          height: 22,
-          cursor: 'inherit',
-          display: { xs: 'none', [mediaQuery]: 'inline-flex' },
-        }}
-      >
-        {workspace?.plan}
-      </Label>
 
       <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
     </ButtonBase>
@@ -127,7 +112,9 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
               onClick={() => handleChangeWorkspace(option)}
               sx={{ height: 48 }}
             >
-              <Avatar alt={option.name} src={option.logo} sx={{ width: 24, height: 24 }} />
+              <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: 'primary.main' }}>
+                {option.name?.charAt(0)}
+              </Avatar>
 
               <Typography
                 noWrap
@@ -137,8 +124,6 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
               >
                 {option.name}
               </Typography>
-
-              <Label color={option.plan === 'Free' ? 'default' : 'info'}>{option.plan}</Label>
             </MenuItem>
           ))}
         </MenuList>
@@ -146,28 +131,30 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
 
       <Divider sx={{ my: 0.5, borderStyle: 'dashed' }} />
 
-      <Button
-        fullWidth
-        startIcon={<Iconify width={18} icon="mingcute:add-line" />}
-        onClick={() => {
-          onClose();
-        }}
-        sx={{
-          gap: 2,
-          justifyContent: 'flex-start',
-          fontWeight: 'fontWeightMedium',
-          [`& .${buttonClasses.startIcon}`]: {
-            m: 0,
-            width: 24,
-            height: 24,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          },
-        }}
-      >
-        Create workspace
-      </Button>
+      <Tooltip title="Contact your administrator to create a new site" placement="top">
+        <span>
+          <Button
+            fullWidth
+            disabled
+            startIcon={<Iconify width={18} icon="mingcute:add-line" />}
+            sx={{
+              gap: 2,
+              justifyContent: 'flex-start',
+              fontWeight: 'fontWeightMedium',
+              [`& .${buttonClasses.startIcon}`]: {
+                m: 0,
+                width: 24,
+                height: 24,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+            }}
+          >
+            Create a Site
+          </Button>
+        </span>
+      </Tooltip>
     </CustomPopover>
   );
 

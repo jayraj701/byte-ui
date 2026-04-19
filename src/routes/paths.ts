@@ -24,6 +24,9 @@ export const paths = {
     siteforce: {
       root: `${ROOTS.DASHBOARD}/siteforce`,
     },
+    payflow: {
+      root: `${ROOTS.DASHBOARD}/payflow`,
+    },
     blank: `${ROOTS.DASHBOARD}/blank`,
     permission: `${ROOTS.DASHBOARD}/permission`,
     user: {

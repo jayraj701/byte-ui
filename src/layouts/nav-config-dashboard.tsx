@@ -13,9 +13,8 @@ const icon = (name: string) => (
 );
 
 const ICONS = {
-  user: icon('ic-user'),
-  lock: icon('ic-lock'),
   dashboard: icon('ic-dashboard'),
+  analytics: icon('ic-analytics'),
 };
 
 // ----------------------------------------------------------------------
@@ -25,26 +24,14 @@ export const navData: NavSectionProps['data'] = [
     subheader: 'SiteForce',
     items: [
       {
-        title: 'Payroll Dashboard',
+        title: 'Dashboard',
         path: paths.dashboard.siteforce.root,
         icon: ICONS.dashboard,
       },
-    ],
-  },
-  {
-    subheader: 'Settings',
-    items: [
       {
-        title: 'Account',
-        path: paths.dashboard.user.account,
-        icon: ICONS.user,
-        deepMatch: true,
-      },
-      {
-        title: 'Permission',
-        path: paths.dashboard.permission,
-        icon: ICONS.lock,
-        allowedRoles: ['admin', 'manager'],
+        title: 'PayFlow Engine',
+        path: paths.dashboard.payflow.root,
+        icon: ICONS.analytics,
       },
     ],
   },

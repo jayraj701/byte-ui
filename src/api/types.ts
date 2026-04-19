@@ -37,6 +37,46 @@ export interface UploadResponse {
   recordCount: number;
 }
 
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+export interface BatchCounts {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+}
+
+export interface SiteCalculations {
+  ready: number;
+  disputed: number;
+  flagged: number;
+}
+
+export interface SiteSummary {
+  site: string;
+  batchCount: number;
+  employeeCount: number;
+  calculations: SiteCalculations;
+}
+
+export interface RecentBatch {
+  id: string;
+  fileName: string;
+  uploadedAt: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  recordCount: number;
+  approvedBy: string | null;
+  approvedAt: string | null;
+}
+
+export interface DashboardSummary {
+  batchCounts: BatchCounts;
+  siteSummaries: SiteSummary[];
+  recentBatches: RecentBatch[];
+}
+
+// ─── Payroll Calculation ──────────────────────────────────────────────────────
+
 export interface PayrollCalculation {
   id: string;
   payrollRecordId: string;
