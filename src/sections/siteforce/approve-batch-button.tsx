@@ -30,8 +30,8 @@ export function ApproveBatchButton({ batchId, batchStatus, disputedCount }: Prop
         toast.success('Batch approved successfully');
         setOpen(false);
       },
-      onError: () => {
-        toast.error('Failed to approve batch');
+      onError: (e) => {
+        toast.error(e.message);
       },
     });
   };

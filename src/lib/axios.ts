@@ -29,8 +29,26 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error?.response?.data?.message || error?.message || 'Something went wrong!';
-    console.error('Axios error:', message);
+    const status: number | undefined = error?.response?.status;
+    const data = error?.response?.data;
+
+    let message: string;
+
+    if (status === 401) {
+      message = 'Unauthorized. Please sign in.';
+    } else if (status === 403) {
+      message = "You don't have permission to perform this action.";
+    } else {
+      // API may return { error: "..." } or { message: "..." } or { errors: [...] }
+      message =
+        data?.error ||
+        data?.message ||
+        (Array.isArray(data?.errors) ? data.errors.join(', ') : undefined) ||
+        error?.message ||
+        'Something went wrong.';
+    }
+
+    console.error(`Axios error [${status ?? 'network'}]:`, message);
     return Promise.reject(new Error(message));
   }
 );

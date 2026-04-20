@@ -49,8 +49,8 @@ export function UploadDialog({ open, onClose, onUploaded }: Props) {
         onUploaded?.(upload.batchId);
         handleClose();
       },
-      onError: () => {
-        // error state displayed inline via the `error` from useMutation
+      onError: (e) => {
+        toast.error(e.message);
       },
     });
   };
