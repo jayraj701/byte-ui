@@ -76,7 +76,7 @@ export function NavVertical({
           (theme) => ({
             ...theme.mixins.hideScrollY,
             pb: 2,
-            px: 0.5,
+            px: 1,
             flex: '1 1 auto',
             overflowY: 'auto',
           }),
